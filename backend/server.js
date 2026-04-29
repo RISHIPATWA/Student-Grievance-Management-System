@@ -49,11 +49,7 @@ const grievanceRoutes = require('./routes/grievances');
 const app = express();
 
 // ✅ CORS configuration (FIXED)
-app.use(cors({
-  origin: "https://student-grievance-frontend-va13.onrender.com",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
+app.use(cors());
 
 // Middleware
 app.use(express.json());

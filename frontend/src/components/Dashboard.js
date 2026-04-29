@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const Dashboard = () => {
+  const API = "https://student-grievance-management-system-q36t.onrender.com";
+
   const [grievances, setGrievances] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
@@ -12,8 +14,6 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
   const [student, setStudent] = useState(null);
-
-  const API = "https://student-grievance-management-system-q36t.onrender.com";
 
   useEffect(() => {
     const studentData = localStorage.getItem('student');
@@ -28,11 +28,18 @@ const Dashboard = () => {
   const fetchGrievances = async () => {
     try {
       const token = localStorage.getItem('token');
+
+      console.log("TOKEN:", token); // DEBUG
+
       const res = await axios.get(`${API}/api/grievances`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
+      console.log("DATA:", res.data); // DEBUG
+
       setGrievances(res.data);
     } catch (err) {
+      console.error("FETCH ERROR:", err); // DEBUG
       setError('Failed to fetch grievances');
     }
   };
@@ -168,15 +175,19 @@ const Dashboard = () => {
 
           <button onClick={handleSearch}>Search</button>
 
-          {grievances.map((g) => (
-            <div key={g._id}>
-              <h4>{g.title}</h4>
-              <p>{g.description}</p>
+          {grievances.length === 0 ? (
+            <p>No grievances found</p>
+          ) : (
+            grievances.map((g) => (
+              <div key={g._id}>
+                <h4>{g.title}</h4>
+                <p>{g.description}</p>
 
-              <button onClick={() => handleEdit(g)}>Edit</button>
-              <button onClick={() => handleDelete(g._id)}>Delete</button>
-            </div>
-          ))}
+                <button onClick={() => handleEdit(g)}>Edit</button>
+                <button onClick={() => handleDelete(g._id)}>Delete</button>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

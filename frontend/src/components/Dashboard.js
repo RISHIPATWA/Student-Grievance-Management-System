@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Dashboard = () => {
@@ -13,25 +12,23 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
   const [student, setStudent] = useState(null);
-  const navigate = useNavigate();
+
+  const API = "https://student-grievance-management-system-q36t.onrender.com";
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     const studentData = localStorage.getItem('student');
-    
-    if (!token || !studentData) {
-      navigate('/login');
-      return;
+
+    if (studentData) {
+      setStudent(JSON.parse(studentData));
     }
 
-    setStudent(JSON.parse(studentData));
     fetchGrievances();
-  }, [navigate]);
+  }, []);
 
   const fetchGrievances = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(process.env.REACT_APP_API_URL || 'https://student-grievance-management-system-q36t.onrender.com/api/grievances', {
+      const res = await axios.get(`${API}/api/grievances`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setGrievances(res.data);
@@ -43,21 +40,21 @@ const Dashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('student');
-    navigate('/login');
+    window.location.href = "/login";
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      
+
       if (editingId) {
-        await axios.put(`${process.env.REACT_APP_API_URL || 'https://student-grievance-management-system-q36t.onrender.com'}/api/grievances/${editingId}`, formData, {
+        await axios.put(`${API}/api/grievances/${editingId}`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setEditingId(null);
       } else {
-        await axios.post(process.env.REACT_APP_API_URL || 'https://student-grievance-management-system-q36t.onrender.com/api/grievances', formData, {
+        await axios.post(`${API}/api/grievances`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
@@ -82,7 +79,7 @@ const Dashboard = () => {
     if (window.confirm('Are you sure you want to delete this grievance?')) {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`${process.env.REACT_APP_API_URL || 'https://student-grievance-management-system-q36t.onrender.com'}/api/grievances/${id}`, {
+        await axios.delete(`${API}/api/grievances/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         fetchGrievances();
@@ -100,7 +97,7 @@ const Dashboard = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${process.env.REACT_APP_API_URL || 'https://student-grievance-management-system-q36t.onrender.com'}/api/grievances/search?title=${searchTerm}`, {
+      const res = await axios.get(`${API}/api/grievances/search?title=${searchTerm}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setGrievances(res.data);
@@ -126,89 +123,60 @@ const Dashboard = () => {
       <div className="dashboard-content">
         <div className="form-section">
           <h3>{editingId ? 'Edit Grievance' : 'Submit New Grievance'}</h3>
+
           <form onSubmit={onSubmit}>
-            <div className="form-group">
-              <label>Title:</label>
-              <input
-                type="text"
-                name="title"
-                value={title}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Description:</label>
-              <textarea
-                name="description"
-                value={description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Category:</label>
-              <select
-                name="category"
-                value={category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
-              >
-                <option value="Academic">Academic</option>
-                <option value="Hostel">Hostel</option>
-                <option value="Transport">Transport</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
+            <input
+              type="text"
+              placeholder="Title"
+              value={title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              required
+            />
+
+            <textarea
+              placeholder="Description"
+              value={description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              required
+            />
+
+            <select
+              value={category}
+              onChange={(e) => setFormData({...formData, category: e.target.value})}
+            >
+              <option value="Academic">Academic</option>
+              <option value="Hostel">Hostel</option>
+              <option value="Transport">Transport</option>
+              <option value="Other">Other</option>
+            </select>
+
             <button type="submit" className="btn">
-              {editingId ? 'Update Grievance' : 'Submit Grievance'}
+              {editingId ? 'Update' : 'Submit'}
             </button>
-            {editingId && (
-              <button 
-                type="button" 
-                className="btn cancel-btn"
-                onClick={() => {
-                  setEditingId(null);
-                  setFormData({ title: '', description: '', category: 'Academic' });
-                }}
-              >
-                Cancel
-              </button>
-            )}
           </form>
         </div>
 
         <div className="grievances-section">
-          <div className="search-bar">
-            <input
-              type="text"
-              placeholder="Search by title..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <button onClick={handleSearch} className="btn">Search</button>
-            <button onClick={fetchGrievances} className="btn">Clear</button>
-          </div>
-
           <h3>Your Grievances</h3>
-          <div className="grievances-list">
-            {grievances.length === 0 ? (
-              <p>No grievances found.</p>
-            ) : (
-              grievances.map(grievance => (
-                <div key={grievance._id} className="grievance-card">
-                  <h4>{grievance.title}</h4>
-                  <p><strong>Category:</strong> {grievance.category}</p>
-                  <p><strong>Description:</strong> {grievance.description}</p>
-                  <p><strong>Status:</strong> <span className={`status ${grievance.status.toLowerCase()}`}>{grievance.status}</span></p>
-                  <p><strong>Date:</strong> {new Date(grievance.date).toLocaleDateString()}</p>
-                  <div className="grievance-actions">
-                    <button onClick={() => handleEdit(grievance)} className="btn edit-btn">Edit</button>
-                    <button onClick={() => handleDelete(grievance._id)} className="btn delete-btn">Delete</button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
+          <button onClick={handleSearch}>Search</button>
+
+          {grievances.map((g) => (
+            <div key={g._id}>
+              <h4>{g.title}</h4>
+              <p>{g.description}</p>
+
+              <button onClick={() => handleEdit(g)}>Edit</button>
+              <button onClick={() => handleDelete(g._id)}>Delete</button>
+            </div>
+          ))}
         </div>
       </div>
     </div>

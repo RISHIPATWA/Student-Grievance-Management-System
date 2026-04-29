@@ -9,8 +9,16 @@ const grievanceRoutes = require('./routes/grievances');
 const app = express();
 
 // Middleware
+
 app.use(cors());
 app.use(express.json());
+
+const cors = require("cors");
+
+app.use(cors({
+  origin: "https://student-grievance-frontend-va13.onrender.com/login",
+  credentials: true
+}));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {

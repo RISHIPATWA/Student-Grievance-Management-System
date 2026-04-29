@@ -19,7 +19,7 @@ const Login = () => {
   const onSubmit = async e => {
     e.preventDefault();
     try {
-      const res = await axios.post(process.env.REACT_APP_API_URL || 'https://student-grievance-management-system-q36t.onrender.com/api/login', formData);
+      const res = await axios.post(process.env.REACT_APP_API_URL || 'https://student-grievance-management-system-q36t.onrender.com/api/auth/login', formData);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('student', JSON.stringify(res.data.student));
       navigate('/dashboard');

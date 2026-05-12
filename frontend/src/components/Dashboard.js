@@ -4,43 +4,46 @@ import axios from 'axios';
 const Dashboard = () => {
   const API = "https://student-grievance-management-system-q36t.onrender.com";
 
-  const [grievances, setGrievances] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: 'Academic'
+    destinationName: '',
+    travelDate: '',
+    numberOfTravelers: '',
+    packageType: 'Silver',
+    price: '',
+    contactAddress: ''
   });
   const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
-  const [student, setStudent] = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const studentData = localStorage.getItem('student');
+    const userData = localStorage.getItem('student');
 
-    if (studentData) {
-      setStudent(JSON.parse(studentData));
+    if (userData) {
+      setUser(JSON.parse(userData));
     }
 
-    fetchGrievances();
+    fetchBookings();
   }, []);
 
-  const fetchGrievances = async () => {
+  const fetchBookings = async () => {
     try {
       const token = localStorage.getItem('token');
 
       console.log("TOKEN:", token); // DEBUG
 
-      const res = await axios.get(`${API}/api/grievances`, {
+      const res = await axios.get(`${API}/api/bookings`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       console.log("DATA:", res.data); // DEBUG
 
-      setGrievances(res.data);
+      setBookings(res.data);
     } catch (err) {
       console.error("FETCH ERROR:", err); // DEBUG
-      setError('Failed to fetch grievances');
+      setError('Failed to fetch bookings');
     }
   };
 
@@ -56,71 +59,74 @@ const Dashboard = () => {
       const token = localStorage.getItem('token');
 
       if (editingId) {
-        await axios.put(`${API}/api/grievances/${editingId}`, formData, {
+        await axios.put(`${API}/api/bookings/${editingId}`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setEditingId(null);
       } else {
-        await axios.post(`${API}/api/grievances`, formData, {
+        await axios.post(`${API}/api/bookings`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
 
-      setFormData({ title: '', description: '', category: 'Academic' });
-      fetchGrievances();
+      setFormData({ destinationName: '', travelDate: '', numberOfTravelers: '', packageType: 'Silver', price: '', contactAddress: '' });
+      fetchBookings();
     } catch (err) {
       setError(err.response?.data?.message || 'Operation failed');
     }
   };
 
-  const handleEdit = (grievance) => {
+  const handleEdit = (booking) => {
     setFormData({
-      title: grievance.title,
-      description: grievance.description,
-      category: grievance.category
+      destinationName: booking.destinationName,
+      travelDate: booking.travelDate,
+      numberOfTravelers: booking.numberOfTravelers,
+      packageType: booking.packageType,
+      price: booking.price,
+      contactAddress: booking.contactAddress
     });
-    setEditingId(grievance._id);
+    setEditingId(booking._id);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this grievance?')) {
+    if (window.confirm('Are you sure you want to delete this booking?')) {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`${API}/api/grievances/${id}`, {
+        await axios.delete(`${API}/api/bookings/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        fetchGrievances();
+        fetchBookings();
       } catch (err) {
-        setError('Failed to delete grievance');
+        setError('Failed to delete booking');
       }
     }
   };
 
   const handleSearch = async () => {
     if (!searchTerm) {
-      fetchGrievances();
+      fetchBookings();
       return;
     }
 
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/grievances/search?title=${searchTerm}`, {
+      const res = await axios.get(`${API}/api/bookings/search?destination=${searchTerm}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setGrievances(res.data);
+      setBookings(res.data);
     } catch (err) {
       setError('Search failed');
     }
   };
 
-  const { title, description, category } = formData;
+  const { destinationName, travelDate, numberOfTravelers, packageType, price, contactAddress } = formData;
 
   return (
     <div className="dashboard">
       <div className="dashboard-header">
-        <h2>Student Grievance Dashboard</h2>
+        <h2>Travel Package Booking Dashboard</h2>
         <div className="user-info">
-          <span>Welcome, {student?.name}</span>
+          <span>Welcome, {user?.name}</span>
           <button onClick={handleLogout} className="btn logout-btn">Logout</button>
         </div>
       </div>
@@ -129,62 +135,90 @@ const Dashboard = () => {
 
       <div className="dashboard-content">
         <div className="form-section">
-          <h3>{editingId ? 'Edit Grievance' : 'Submit New Grievance'}</h3>
+          <h3>{editingId ? 'Edit Booking' : 'Create New Booking'}</h3>
 
           <form onSubmit={onSubmit}>
             <input
               type="text"
-              placeholder="Title"
-              value={title}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              placeholder="Destination Name"
+              value={destinationName}
+              onChange={(e) => setFormData({...formData, destinationName: e.target.value})}
               required
             />
 
-            <textarea
-              placeholder="Description"
-              value={description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
+            <input
+              type="date"
+              placeholder="Travel Date"
+              value={travelDate}
+              onChange={(e) => setFormData({...formData, travelDate: e.target.value})}
+              required
+            />
+
+            <input
+              type="number"
+              placeholder="Number of Travelers"
+              value={numberOfTravelers}
+              onChange={(e) => setFormData({...formData, numberOfTravelers: e.target.value})}
               required
             />
 
             <select
-              value={category}
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
+              value={packageType}
+              onChange={(e) => setFormData({...formData, packageType: e.target.value})}
             >
-              <option value="Academic">Academic</option>
-              <option value="Hostel">Hostel</option>
-              <option value="Transport">Transport</option>
-              <option value="Other">Other</option>
+              <option value="Silver">Silver</option>
+              <option value="Gold">Gold</option>
+              <option value="Platinum">Platinum</option>
             </select>
 
+            <input
+              type="number"
+              placeholder="Price"
+              value={price}
+              onChange={(e) => setFormData({...formData, price: e.target.value})}
+              required
+            />
+
+            <textarea
+              placeholder="Contact Address"
+              value={contactAddress}
+              onChange={(e) => setFormData({...formData, contactAddress: e.target.value})}
+              required
+            />
+
             <button type="submit" className="btn">
-              {editingId ? 'Update' : 'Submit'}
+              {editingId ? 'Update Booking' : 'Create Booking'}
             </button>
           </form>
         </div>
 
-        <div className="grievances-section">
-          <h3>Your Grievances</h3>
+        <div className="bookings-section">
+          <h3>Your Travel Bookings</h3>
 
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search destinations..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
 
           <button onClick={handleSearch}>Search</button>
 
-          {grievances.length === 0 ? (
-            <p>No grievances found</p>
+          {bookings.length === 0 ? (
+            <p>No bookings found</p>
           ) : (
-            grievances.map((g) => (
-              <div key={g._id}>
-                <h4>{g.title}</h4>
-                <p>{g.description}</p>
+            bookings.map((booking) => (
+              <div key={booking._id} className="booking-item">
+                <h4>{booking.destinationName}</h4>
+                <p><strong>Travel Date:</strong> {booking.travelDate}</p>
+                <p><strong>Travelers:</strong> {booking.numberOfTravelers}</p>
+                <p><strong>Package:</strong> {booking.packageType}</p>
+                <p><strong>Price:</strong> ${booking.price}</p>
+                <p><strong>Status:</strong> {booking.bookingStatus || 'Confirmed'}</p>
+                <p><strong>Contact:</strong> {booking.contactAddress}</p>
 
-                <button onClick={() => handleEdit(g)}>Edit</button>
-                <button onClick={() => handleDelete(g._id)}>Delete</button>
+                <button onClick={() => handleEdit(booking)}>Edit</button>
+                <button onClick={() => handleDelete(booking._id)}>Delete</button>
               </div>
             ))
           )}

@@ -1,35 +1,43 @@
 const mongoose = require('mongoose');
 
-const grievanceSchema = new mongoose.Schema({
-  title: {
+const bookingSchema = new mongoose.Schema({
+  destinationName: {
     type: String,
     required: true
   },
-  description: {
+  travelDate: {
     type: String,
     required: true
   },
-  category: {
-    type: String,
-    enum: ['Academic', 'Hostel', 'Transport', 'Other'],
+  numberOfTravelers: {
+    type: Number,
     required: true
   },
-  date: {
-    type: Date,
-    default: Date.now
-  },
-  status: {
+  packageType: {
     type: String,
-    enum: ['Pending', 'Resolved'],
-    default: 'Pending'
+    enum: ['Silver', 'Gold', 'Platinum'],
+    required: true
   },
-  student: {
+  price: {
+    type: Number,
+    required: true
+  },
+  bookingStatus: {
+    type: String,
+    enum: ['Pending', 'Confirmed', 'Cancelled'],
+    default: 'Confirmed'
+  },
+  contactAddress: {
+    type: String,
+    required: true
+  },
+  user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Student',
+    ref: 'User',
     required: true
   }
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Grievance', grievanceSchema);
+module.exports = mongoose.model('Booking', bookingSchema);

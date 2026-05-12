@@ -1,133 +1,136 @@
 const express = require('express');
-const Grievance = require('../models/Grievance');
+const Booking = require('../models/Grievance'); // Still using Grievance.js filename but now exports Booking model
 const auth = require('../middleware/auth');
 const router = express.Router();
 
-// Submit a grievance
+// Create a booking
 router.post('/', auth, async (req, res) => {
   try {
-    const { title, description, category } = req.body;
+    const { destinationName, travelDate, numberOfTravelers, packageType, price, contactAddress } = req.body;
 
-    const grievance = new Grievance({
-      title,
-      description,
-      category,
-      student: req.student.id
+    const booking = new Booking({
+      destinationName,
+      travelDate,
+      numberOfTravelers,
+      packageType,
+      price,
+      contactAddress,
+      user: req.student.id
     });
 
-    await grievance.save();
-    await grievance.populate('student', 'name email');
+    await booking.save();
+    await booking.populate('user', 'name email mobileNumber');
 
-    res.status(201).json(grievance);
+    res.status(201).json(booking);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Get all grievances for the logged-in student
+// Get all bookings for the logged-in user
 router.get('/', auth, async (req, res) => {
   try {
-    const grievances = await Grievance.find({ student: req.student.id })
-      .populate('student', 'name email')
-      .sort({ date: -1 });
+    const bookings = await Booking.find({ user: req.student.id })
+      .populate('user', 'name email mobileNumber')
+      .sort({ createdAt: -1 });
     
-    res.json(grievances);
+    res.json(bookings);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Get a specific grievance by ID
+// Get a specific booking by ID
 router.get('/:id', auth, async (req, res) => {
   try {
-    const grievance = await Grievance.findById(req.params.id)
-      .populate('student', 'name email');
+    const booking = await Booking.findById(req.params.id)
+      .populate('user', 'name email mobileNumber');
     
-    if (!grievance) {
-      return res.status(404).json({ message: 'Grievance not found' });
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
     }
 
-    // Check if the grievance belongs to the logged-in student
-    if (grievance.student._id.toString() !== req.student.id) {
-      return res.status(403).json({ message: 'Not authorized to view this grievance' });
+    // Check if the booking belongs to the logged-in user
+    if (booking.user._id.toString() !== req.student.id) {
+      return res.status(403).json({ message: 'Not authorized to view this booking' });
     }
 
-    res.json(grievance);
+    res.json(booking);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Update a grievance
+// Update a booking
 router.put('/:id', auth, async (req, res) => {
   try {
-    const { title, description, category, status } = req.body;
+    const { destinationName, travelDate, numberOfTravelers, packageType, price, contactAddress, bookingStatus } = req.body;
     
-    let grievance = await Grievance.findById(req.params.id);
+    let booking = await Booking.findById(req.params.id);
     
-    if (!grievance) {
-      return res.status(404).json({ message: 'Grievance not found' });
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
     }
 
-    // Check if the grievance belongs to the logged-in student
-    if (grievance.student.toString() !== req.student.id) {
-      return res.status(403).json({ message: 'Not authorized to update this grievance' });
+    // Check if the booking belongs to the logged-in user
+    if (booking.user.toString() !== req.student.id) {
+      return res.status(403).json({ message: 'Not authorized to update this booking' });
     }
 
-    grievance = await Grievance.findByIdAndUpdate(
+    booking = await Booking.findByIdAndUpdate(
       req.params.id,
-      { title, description, category, status },
+      { destinationName, travelDate, numberOfTravelers, packageType, price, contactAddress, bookingStatus },
       { new: true, runValidators: true }
-    ).populate('student', 'name email');
+    ).populate('user', 'name email mobileNumber');
 
-    res.json(grievance);
+    res.json(booking);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Delete a grievance
+// Delete a booking
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const grievance = await Grievance.findById(req.params.id);
+    const booking = await Booking.findById(req.params.id);
     
-    if (!grievance) {
-      return res.status(404).json({ message: 'Grievance not found' });
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
     }
 
-    // Check if the grievance belongs to the logged-in student
-    if (grievance.student.toString() !== req.student.id) {
-      return res.status(403).json({ message: 'Not authorized to delete this grievance' });
+    // Check if the booking belongs to the logged-in user
+    if (booking.user.toString() !== req.student.id) {
+      return res.status(403).json({ message: 'Not authorized to delete this booking' });
     }
 
-    await Grievance.findByIdAndDelete(req.params.id);
+    await Booking.findByIdAndDelete(req.params.id);
     
-    res.json({ message: 'Grievance deleted successfully' });
+    res.json({ message: 'Booking deleted successfully' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Search grievances by title
+// Search bookings by destination
 router.get('/search', auth, async (req, res) => {
   try {
-    const { title } = req.query;
+    const { destination } = req.query;
     
-    if (!title) {
-      return res.status(400).json({ message: 'Title parameter is required for search' });
+    if (!destination) {
+      return res.status(400).json({ message: 'Destination parameter is required for search' });
     }
 
-    const grievances = await Grievance.find({
-      student: req.student.id,
-      title: { $regex: title, $options: 'i' }
-    }).populate('student', 'name email').sort({ date: -1 });
+    const bookings = await Booking.find({
+      user: req.student.id,
+      destinationName: { $regex: destination, $options: 'i' }
+    }).populate('user', 'name email mobileNumber').sort({ createdAt: -1 });
 
-    res.json(grievances);
+    res.json(bookings);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

@@ -107,13 +107,14 @@ const Register = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    mobileNumber: ''
   });
 
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const { name, email, password, confirmPassword } = formData;
+  const { name, email, password, confirmPassword, mobileNumber } = formData;
 
   const onChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -136,7 +137,8 @@ const Register = () => {
         {
           name,
           email,
-          password
+          password,
+          mobileNumber
         }
       );
 
@@ -186,6 +188,17 @@ const Register = () => {
               type="email"
               name="email"
               value={email}
+              onChange={onChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Mobile Number:</label>
+            <input
+              type="text"
+              name="mobileNumber"
+              value={mobileNumber}
               onChange={onChange}
               required
             />

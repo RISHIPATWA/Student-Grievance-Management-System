@@ -66,7 +66,7 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // ✅ Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/grievances', grievanceRoutes);
+app.use('/api/bookings', grievanceRoutes); // grievanceRoutes now handles bookings
 
 // ✅ Error handling middleware
 app.use((err, req, res, next) => {
